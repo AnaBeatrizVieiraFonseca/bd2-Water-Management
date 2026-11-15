@@ -977,3 +977,74 @@ SELECT id_estacao,id_parametro,dia,qtd,centro*(qtd-2)+lo+hi,lo,hi,UTC_TIMESTAMP(
 FROM extremos;
 
 COMMIT;
+
+START TRANSACTION;
+UPDATE bacia_hidrografica SET nome=CASE codigo
+ WHEN 'BAC-01' THEN 'Bacia do Rio Cedro' WHEN 'BAC-02' THEN 'Bacia do Rio Capivari'
+ WHEN 'BAC-03' THEN 'Bacia do Rio Jacutinga' WHEN 'BAC-04' THEN 'Bacia do Rio Monjolo' END
+WHERE codigo IN ('BAC-01','BAC-02','BAC-03','BAC-04');
+UPDATE estacao_monitoramento SET nome='Ponte do Cedro' WHERE codigo='EST-01';
+UPDATE corpo_hidrico SET nome='Rio Cedro' WHERE codigo='CH-01';
+UPDATE estacao_monitoramento SET nome='Passagem da Figueira' WHERE codigo='EST-02';
+UPDATE corpo_hidrico SET nome='Rio Figueira' WHERE codigo='CH-02';
+UPDATE estacao_monitoramento SET nome='Poço das Garças' WHERE codigo='EST-03';
+UPDATE corpo_hidrico SET nome='Rio Garças' WHERE codigo='CH-03';
+UPDATE estacao_monitoramento SET nome='Foz do Monjolo' WHERE codigo='EST-04';
+UPDATE corpo_hidrico SET nome='Rio Monjolo' WHERE codigo='CH-04';
+UPDATE estacao_monitoramento SET nome='Várzea do Ipê' WHERE codigo='EST-05';
+UPDATE corpo_hidrico SET nome='Rio Ipê' WHERE codigo='CH-05';
+UPDATE estacao_monitoramento SET nome='Porto da Canela' WHERE codigo='EST-06';
+UPDATE corpo_hidrico SET nome='Rio Canela' WHERE codigo='CH-06';
+UPDATE estacao_monitoramento SET nome='Ponte das Pedras' WHERE codigo='EST-07';
+UPDATE corpo_hidrico SET nome='Rio Pedras' WHERE codigo='CH-07';
+UPDATE estacao_monitoramento SET nome='Barra do Capivari' WHERE codigo='EST-08';
+UPDATE corpo_hidrico SET nome='Rio Capivari' WHERE codigo='CH-08';
+UPDATE estacao_monitoramento SET nome='Travessia do Jacutinga' WHERE codigo='EST-09';
+UPDATE corpo_hidrico SET nome='Rio Jacutinga' WHERE codigo='CH-09';
+UPDATE estacao_monitoramento SET nome='Baixada do Angico' WHERE codigo='EST-10';
+UPDATE corpo_hidrico SET nome='Rio Angico' WHERE codigo='CH-10';
+UPDATE estacao_monitoramento SET nome='Ponte do Barreiro' WHERE codigo='EST-11';
+UPDATE corpo_hidrico SET nome='Rio Barreiro' WHERE codigo='CH-11';
+UPDATE estacao_monitoramento SET nome='Foz da Limeira' WHERE codigo='EST-12';
+UPDATE corpo_hidrico SET nome='Rio Limeira' WHERE codigo='CH-12';
+UPDATE estacao_monitoramento SET nome='Barragem da Serra Azul' WHERE codigo='EST-13';
+UPDATE corpo_hidrico SET nome='Reservatório Serra Azul' WHERE codigo='CH-13';
+UPDATE estacao_monitoramento SET nome='Tomada do Pinhal' WHERE codigo='EST-14';
+UPDATE corpo_hidrico SET nome='Reservatório Pinhal' WHERE codigo='CH-14';
+UPDATE estacao_monitoramento SET nome='Dique do Horizonte' WHERE codigo='EST-15';
+UPDATE corpo_hidrico SET nome='Reservatório Horizonte' WHERE codigo='CH-15';
+UPDATE estacao_monitoramento SET nome='Margem da Esperança' WHERE codigo='EST-16';
+UPDATE corpo_hidrico SET nome='Reservatório Esperança' WHERE codigo='CH-16';
+UPDATE estacao_monitoramento SET nome='Barragem da Boa Vista' WHERE codigo='EST-17';
+UPDATE corpo_hidrico SET nome='Reservatório Boa Vista' WHERE codigo='CH-17';
+UPDATE estacao_monitoramento SET nome='Tomada da Pedra Branca' WHERE codigo='EST-18';
+UPDATE corpo_hidrico SET nome='Reservatório Pedra Branca' WHERE codigo='CH-18';
+UPDATE estacao_monitoramento SET nome='Dique do Retiro' WHERE codigo='EST-19';
+UPDATE corpo_hidrico SET nome='Reservatório Retiro' WHERE codigo='CH-19';
+UPDATE estacao_monitoramento SET nome='Margem do Vale Verde' WHERE codigo='EST-20';
+UPDATE corpo_hidrico SET nome='Reservatório Vale Verde' WHERE codigo='CH-20';
+SET @ator=(SELECT id_usuario FROM usuario WHERE email='monitoramento@simulacao.example');
+SET @e1=(SELECT id_estacao FROM estacao_monitoramento WHERE codigo='EST-01');
+SET @e2=(SELECT id_estacao FROM estacao_monitoramento WHERE codigo='EST-02');
+SET @s1=(SELECT id_sensor FROM sensor WHERE codigo_patrimonial='EST-01-TURB');
+SET @s2=(SELECT id_sensor FROM sensor WHERE codigo_patrimonial='EST-02-TURB');
+SET @inicio='2026-07-01 08:00:00';
+UPDATE instalacao_sensor SET fim_em=@inicio,id_usuario_retirada=@ator
+WHERE (id_sensor=@s1 AND id_estacao=@e1 OR id_sensor=@s2 AND id_estacao=@e2) AND fim_em IS NULL;
+INSERT INTO instalacao_sensor (id_sensor,id_estacao,inicio_em,id_usuario_instalacao,observacao)
+VALUES (@s1,@e2,@inicio,@ator,'Remanejamento após inspeção.'),(@s2,@e1,@inicio,@ator,'Remanejamento após inspeção.');
+
+SET @par=(SELECT id_parametro FROM parametro_monitoramento WHERE codigo='TURBIDEZ');
+SET @regra=(SELECT id_regra FROM regra_monitoramento WHERE id_estacao=@e1 AND id_parametro=@par);
+UPDATE versao_regra_monitoramento SET fim_em=@inicio WHERE id_regra=@regra AND numero_versao=1 AND fim_em IS NULL;
+INSERT INTO versao_regra_monitoramento (id_regra,numero_versao,limite_superior,prioridade,inicio_em,id_usuario_configuracao)
+VALUES (@regra,2,50,'ATENCAO',@inicio,@ator);
+
+INSERT INTO manutencao (id_sensor,tipo_intervencao,inicio_em,fim_em,descricao,resultado,id_usuario_responsavel)
+VALUES (@s2,'CALIBRACAO','2026-07-02 08:00:00','2026-07-02 09:30:00',
+'Comparação com padrão de turbidez.','Ajuste de leitura registrado.',@ator);
+SET @manut=LAST_INSERT_ID();
+INSERT INTO calibracao_parametro (id_manutencao,id_parametro,valor_referencia,valor_observado,conclusao,ajuste_realizado)
+VALUES (@manut,@par,20,20.2,'Sensor comparado com padrão de 20 NTU.','Correção de desvio de 0,2 NTU.');
+COMMIT;
+

@@ -129,3 +129,54 @@ SET concluida_em = '2025-04-09 16:00:00',
 WHERE id_ocorrencia = @ocorrencia_corpo;
 
 COMMIT;
+
+-- Demonstracao de DELETE: correcao de uma duplicidade simulada.
+START TRANSACTION;
+
+
+SET @acao_original = (
+    SELECT a.id_acao
+    FROM acao_ocorrencia a
+    INNER JOIN ocorrencia o ON o.id_ocorrencia = a.id_ocorrencia
+    WHERE o.concluida_em IS NULL
+    ORDER BY a.id_acao
+    LIMIT 1
+);
+
+
+INSERT INTO acao_ocorrencia
+    (id_ocorrencia, descricao, realizada_em, id_usuario_responsavel)
+SELECT id_ocorrencia, descricao, realizada_em, id_usuario_responsavel
+FROM acao_ocorrencia
+WHERE id_acao = @acao_original;
+
+SET @acao_duplicada = CASE
+    WHEN @acao_original IS NOT NULL THEN LAST_INSERT_ID()
+    ELSE NULL
+END;
+
+
+SELECT id_acao, id_ocorrencia, descricao, realizada_em
+FROM acao_ocorrencia
+WHERE id_acao IN (@acao_original, @acao_duplicada)
+ORDER BY id_acao;
+
+
+DELETE FROM acao_ocorrencia
+WHERE id_acao = @acao_duplicada
+  AND id_acao <> @acao_original;
+
+
+SELECT id_acao, id_ocorrencia, descricao, realizada_em
+FROM acao_ocorrencia
+WHERE id_acao IN (@acao_original, @acao_duplicada)
+ORDER BY id_acao;
+
+ROLLBACK;
+
+
+SELECT id_acao, id_ocorrencia, descricao, realizada_em
+FROM acao_ocorrencia
+WHERE id_acao IN (@acao_original, @acao_duplicada)
+ORDER BY id_acao;
+

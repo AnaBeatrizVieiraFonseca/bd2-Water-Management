@@ -23,7 +23,7 @@ if errorlevel 1 goto erro
 ".venv\Scripts\python.exe" -c "import mysql.connector; import pymongo" >nul 2>&1
 if not errorlevel 1 goto executar
 echo Preparando as duas bibliotecas de conexao na primeira execucao...
-".venv\Scripts\python.exe" -m pip install -r requirements.txt
+".venv\Scripts\python.exe" -m pip install mysql-connector-python==9.7.0 pymongo==4.20.0
 if errorlevel 1 goto erro
 
 :executar

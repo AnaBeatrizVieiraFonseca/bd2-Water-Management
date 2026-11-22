@@ -1,0 +1,40 @@
+# Ambientes Python e arquivos gerados localmente
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Credenciais e configurações privadas
+.env
+.env.*
+!.env.example
+credenciais/
+segredos/
+senhas*.txt
+*.pem
+*.key
+
+# Dados internos dos servidores e arquivos de execução
+mysql-data/
+mongodb-data/
+*.pid
+*.sock
+*.log
+
+# Cópias temporárias do Workbench e dos editores
+*.mwb.bak
+*.mwb~
+*.bak
+*.tmp
+*.swp
+~$*
+.vscode/
+.idea/
+
+# Arquivos do sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Os scripts SQL, os JSONs e a carga ZIP do projeto permanecem versionados.

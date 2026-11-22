@@ -1,0 +1,7 @@
+{
+  "estacao_codigo": "EST-01",
+  "sensor_codigo": "EST-01-TURB",
+  "registrado_em": { "$date": "2025-01-15T14:00:00.000Z" },
+  "equipamento": { "bateria_pct": 88, "sinal_dbm": -67 },
+  "origem": { "canal": "DEMONSTRACAO_INSERCAO" }
+}

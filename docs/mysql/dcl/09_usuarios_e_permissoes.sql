@@ -1,14 +1,13 @@
--- Executar como root ou conta com autorização para criar usuários, papéis e conceder privilégios.
--- Executar uma única vez. Guardar as senhas retornadas em local privado, fora do GitHub.
+-- Guardar as senhas de contas novas fora do GitHub.
 USE recursos_hidricos;
 
 -- 1. Criar os três perfis de acesso no MySQL.
-CREATE ROLE 'rh_admin', 'rh_operador', 'rh_analista';
+CREATE ROLE IF NOT EXISTS 'rh_admin', 'rh_operador', 'rh_analista';
 
 -- 2. Criar uma conta local para demonstrar cada perfil.
-CREATE USER 'rh_admin_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
-CREATE USER 'rh_operador_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
-CREATE USER 'rh_analista_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
+CREATE USER IF NOT EXISTS 'rh_admin_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
+CREATE USER IF NOT EXISTS 'rh_operador_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
+CREATE USER IF NOT EXISTS 'rh_analista_projeto'@'localhost' IDENTIFIED BY RANDOM PASSWORD;
 
 -- 3. Administrador: gerenciar os objetos e dados somente da base do projeto.
 GRANT ALL PRIVILEGES ON recursos_hidricos.* TO 'rh_admin';

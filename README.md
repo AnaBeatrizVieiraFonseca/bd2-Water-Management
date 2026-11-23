@@ -26,7 +26,7 @@ Os parâmetros monitorados são temperatura da água, pH, oxigênio dissolvido, 
 | mysql-connector-python 9.7.0 e PyMongo 4.20.0 | Conexão do integrador com os bancos de dados. |
 | Git e GitHub | Versionamento e organização dos arquivos do projeto. |
 
-A reprodução dos scripts foi verificada com MySQL **8.0.44**, MongoDB **8.0.38** e Python **3.14**, em ambiente Windows. O inicializador da integração é um arquivo `.bat` para Windows.
+A reprodução dos scripts foi verificada com MySQL **8.0.44**, MongoDB **8.0.38** e Python **3.14**, em ambiente Windows. O painel Streamlit é iniciado por `docs/apresentacao/ABRIR_PAINEL.bat`, que prepara o ambiente Python quando necessário.
 
 ## Arquitetura de dados
 
@@ -64,9 +64,9 @@ MySQL: resumos diários, alertas e referências às evidências
 Consultas, views, relatórios e atendimento dos alertas
 ```
 
-O integrador é iniciado manualmente. Ele lê as medições do MongoDB, valida os sensores, parâmetros, unidades e períodos de instalação com os cadastros do MySQL e avalia as leituras conforme a regra vigente no instante da coleta.
+O painel chama o integrador Python. Ele lê as medições do MongoDB e as regras no MySQL, usa as leituras marcadas como válidas para calcular resumos e comparar valores com a regra vigente no horário da coleta.
 
-As leituras válidas alimentam os resumos diários e a avaliação dos limites. Leituras inválidas permanecem no histórico e são contabilizadas separadamente. As evidências dos alertas guardam o identificador do documento MongoDB e da leitura, permitindo localizar a informação original. O resultado do processamento é registrado em `logs_ingestao`.
+O integrador assume que a carga fixa já está consistente: não confere a compatibilidade de sensores, unidades ou instalações entre os bancos. Leituras inválidas são ignoradas nos resumos. Desvios geram alertas/evidências no MySQL; cada execução registra logs em `logs_ingestao` no MongoDB. Reexecutar o mesmo dia atualiza os resumos, não duplica evidências existentes e acrescenta novos logs.
 
 Os valores individuais das medições permanecem no MongoDB; no MySQL ficam os dados de gestão e os resultados consolidados necessários às consultas.
 
@@ -80,7 +80,6 @@ bd2-Water-Management/
     ├── requisitos/       # Levantamento de requisitos
     ├── dicionario/       # Dicionário de dados
     ├── modelagem/        # MER, modelo relacional e documentação MongoDB
-    ├── execucao/         # Guia de montagem e testes em outro computador
     ├── mysql/
     │   ├── ddl/          # Criação do banco e das tabelas
     │   ├── dml/          # Cadastros e cenários operacionais
@@ -94,7 +93,8 @@ bd2-Water-Management/
     │   ├── 01_criar_colecoes.js
     │   ├── dados/        # Carga JSON e manipulação de documentos
     │   └── consultas/    # Consultas, pipelines e indexação
-    └── integração/       # Integrador Python e inicializador Windows
+    ├── integração/       # Função Python chamada pelo painel
+    └── apresentacao/     # Painel Streamlit, catálogo e arquivos de demonstração
 ```
 
 Documentos disponíveis:
@@ -104,15 +104,15 @@ Documentos disponíveis:
 - [Modelagem relacional (.mwb)](docs/modelagem/modelagem.mwb).
 - [Modelo Entidade-Relacionamento](docs/modelagem/MER.png).
 - [Documentação da modelagem MongoDB](docs/modelagem/Modelagem_mongodb.pdf).
-- [Guia de execução](docs/execucao/Guia_montagem_e_testes_Grupo_4.pdf).
+- [Atualização do fluxo integrado](docs/modelagem/ATUALIZACAO_FLUXO.md), com o comportamento atual do painel e do integrador.
 
 ## Como executar
 
-O [guia de execução](docs/execucao/Guia_montagem_e_testes_Grupo_4.pdf) apresenta os pré-requisitos, a ordem de execução dos scripts, a importação dos dados e a integração entre as bases. A sequência básica está abaixo.
+As etapas abaixo descrevem a montagem das bases e a execução do painel integrado.
 
 ### 1. Preparar o ambiente
 
-Baixe o repositório em **Code > Download ZIP** e extraia os arquivos. Instale MySQL Server, Workbench, MongoDB Community, Compass e Python com `pip` e suporte a Tkinter. Os servidores devem estar em execução; Workbench e Compass são os clientes de acesso.
+Baixe o repositório em **Code > Download ZIP** e extraia os arquivos. Instale MySQL Server, Workbench, MongoDB Community, Compass e Python com `pip`. Os servidores devem estar em execução; Workbench e Compass são os clientes de acesso.
 
 Os padrões locais são MySQL em `localhost:3306` e MongoDB em `mongodb://localhost:27017`. `localhost` corresponde ao computador em que o projeto está sendo executado. O cenário acadêmico utiliza MongoDB local sem autenticação, restrito ao próprio computador.
 
@@ -159,11 +159,7 @@ O script de indexação compara a consulta antes e depois da criação do índic
 
 ### 4. Executar a integração
 
-Mantenha [01_integrar.py](docs/integra%C3%A7%C3%A3o/01_integrar.py) e [02_executar_integracao.bat](docs/integra%C3%A7%C3%A3o/02_executar_integracao.bat) na mesma pasta. Com os dois servidores em execução e as cargas concluídas, abra o `.bat` com dois cliques.
-
-Na primeira execução, o inicializador cria uma `.venv` e instala as duas bibliotecas de conexão; essa preparação exige internet. Informe na janela a senha local da conta **`rh_integracao_projeto`**, criada na etapa DCL. A senha não é gravada no código.
-
-O período padrão compreende **01/01/2025 a 04/06/2026**, com horários em UTC e processamento por estação e dia. Aguarde a conclusão antes de executar os testes seguintes. Execute uma instância do integrador por vez.
+Com os servidores MySQL e MongoDB em execução e os dados carregados, abra `docs/apresentacao/ABRIR_PAINEL.bat`. Na aba **Integração Python**, informe a senha de `rh_integracao_projeto` e escolha a ação. A opção de integração processa as medições de **01/07/2025** nas 20 estações. A senha é usada somente durante a conexão.
 
 ### 5. Consultar e testar a solução
 
@@ -187,7 +183,7 @@ Na carga publicada, a consulta SQL 7 pode retornar vazia porque os alertas gerad
 
 A carga simulada representa **4 bacias hidrográficas, 20 corpos hídricos, 20 estações e 100 sensores**. Os arquivos JSON estão incluídos no repositório; a montagem não depende de gerar novamente a simulação.
 
-Na reprodução da carga, após as inserções de exemplo, atualizações, exclusões e primeira integração, foram obtidos:
+Snapshot da reprodução completa anterior, após a carga, exemplos e integração de todo o período:
 
 | Conjunto | Quantidade |
 | --- | ---: |
@@ -199,7 +195,7 @@ Na reprodução da carga, após as inserções de exemplo, atualizações, exclu
 | Documentos em `telemetria` | 52.017 |
 | Documentos em `logs_ingestao`, após a integração | 499.101 |
 
-Um documento de medição pode conter várias leituras. A integração processou **1.241.038 leituras válidas** e identificou **6.467 inválidas**. As contagens se referem à montagem descrita; novas operações e execuções podem alterar os totais.
+Um documento de medição pode conter várias leituras. Na reprodução completa anterior, a integração processou **1.241.038 leituras válidas** e identificou **6.467 inválidas**. Esses valores não são o resultado da ação atual do painel, que integra somente 01/07/2025; novas operações podem alterar os totais.
 
 O maior crescimento ocorre nas medições e nos logs. Como estimativa, 20 estações enviando uma coleta por hora produzem **175.200 documentos de medição por ano**; com cinco leituras por coleta, são **876.000 leituras anuais**. Para 20 estações e cinco parâmetros, os resumos diários representam **36.500 registros por ano**. São projeções desse cenário, antes de falhas, reenvios e mudanças na frequência de coleta.
 
@@ -218,3 +214,9 @@ A separação entre medições individuais e resumos reduz o volume consultado n
 ## Disciplina
 
 Banco de Dados II.
+
+## Painel integrado
+
+O painel Streamlit em `docs/apresentacao/app.py` mostra os dois pipelines, a modelagem e a integração Python. Para abrir, execute `docs/apresentacao/Recursos Hidricos.exe` (requer o .NET 9 Desktop Runtime) ou `docs/apresentacao/ABRIR_PAINEL.bat`. O lançador prepara o ambiente virtual e instala `requirements.txt` na primeira execução; depois abra `http://127.0.0.1:8501` se o navegador não abrir automaticamente.
+
+Na aba **Integração Python**, “Rastrear evidência” consulta os bancos sem gravar. “Integrar 01/07/2025” grava resumos, alertas/evidências e logs. A senha de `rh_integracao_projeto` é solicitada no painel e não é salva em arquivo.

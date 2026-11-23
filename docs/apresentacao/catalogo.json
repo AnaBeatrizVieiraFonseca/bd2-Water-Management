@@ -1,0 +1,474 @@
+[
+  {
+    "collection": "medicoes",
+    "kind": "find",
+    "filter": {
+      "estacao_codigo": "EST-01",
+      "coletado_em": {
+        "$gte": {
+          "$date": "2025-01-15T00:00:00Z"
+        },
+        "$lt": {
+          "$date": "2025-01-16T00:00:00Z"
+        }
+      }
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "coletado_em": 1,
+      "recebido_em": 1
+    },
+    "sort": {
+      "coletado_em": 1
+    },
+    "title": "1. Quais coletas foram registradas na EST-01 em 15/01/2025, em ordem de coleta?",
+    "source": "06_consultas.js",
+    "code": "// 1. Quais coletas foram registradas na EST-01 em 15/01/2025, em ordem de coleta?\nprint('Consulta 1');\nprintjson(db.medicoes.find(\n    { estacao_codigo: 'EST-01', coletado_em: {\n        $gte: ISODate('2025-01-15T00:00:00Z'), $lt: ISODate('2025-01-16T00:00:00Z')\n    } },\n    { _id: 0, mensagem_codigo: 1, coletado_em: 1, recebido_em: 1 }\n).sort({ coletado_em: 1 }).toArray());"
+  },
+  {
+    "collection": "medicoes",
+    "kind": "find",
+    "filter": {
+      "estacao_codigo": "EST-01",
+      "coletado_em": {
+        "$gte": {
+          "$date": "2025-01-01T00:00:00Z"
+        },
+        "$lt": {
+          "$date": "2025-07-01T08:00:00Z"
+        }
+      },
+      "leituras": {
+        "$elemMatch": {
+          "parametro_codigo": "TURBIDEZ",
+          "valida": true,
+          "valor": {
+            "$gt": {
+              "$numberDecimal": "45"
+            }
+          }
+        }
+      }
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "coletado_em": 1,
+      "leituras": {
+        "$elemMatch": {
+          "parametro_codigo": "TURBIDEZ",
+          "valida": true,
+          "valor": {
+            "$gt": {
+              "$numberDecimal": "45"
+            }
+          }
+        }
+      }
+    },
+    "sort": {
+      "coletado_em": 1
+    },
+    "limit": 10,
+    "title": "2. Quais foram as dez primeiras coletas da EST-01 com turbidez valida acima de 45 NTU durante a vigencia desse limite?",
+    "source": "06_consultas.js",
+    "code": "// 2. Quais foram as dez primeiras coletas da EST-01 com turbidez valida acima de 45 NTU durante a vigencia desse limite?\nprint('Consulta 2');\nprintjson(db.medicoes.find(\n    { estacao_codigo: 'EST-01',\n      coletado_em: { $gte: ISODate('2025-01-01T00:00:00Z'), $lt: ISODate('2025-07-01T08:00:00Z') },\n      leituras: { $elemMatch: { parametro_codigo: 'TURBIDEZ', valida: true, valor: { $gt: NumberDecimal('45') } } } },\n    { _id: 0, mensagem_codigo: 1, coletado_em: 1,\n      leituras: { $elemMatch: { parametro_codigo: 'TURBIDEZ', valida: true, valor: { $gt: NumberDecimal('45') } } } }\n).sort({ coletado_em: 1 }).limit(10).toArray());"
+  },
+  {
+    "collection": "medicoes",
+    "kind": "find",
+    "filter": {
+      "leituras": {
+        "$elemMatch": {
+          "valida": false,
+          "motivo_invalidade": "ERRO_SENSOR"
+        }
+      }
+    },
+    "projection": {
+      "_id": 0,
+      "estacao_codigo": 1,
+      "coletado_em": 1,
+      "leituras": {
+        "$elemMatch": {
+          "valida": false,
+          "motivo_invalidade": "ERRO_SENSOR"
+        }
+      }
+    },
+    "sort": {
+      "coletado_em": -1,
+      "estacao_codigo": 1
+    },
+    "limit": 10,
+    "title": "3. Quais sao as dez coletas mais recentes com pelo menos uma leitura marcada como erro de sensor?",
+    "source": "06_consultas.js",
+    "code": "// 3. Quais sao as dez coletas mais recentes com pelo menos uma leitura marcada como erro de sensor?\nprint('Consulta 3');\nprintjson(db.medicoes.find(\n    { leituras: { $elemMatch: { valida: false, motivo_invalidade: 'ERRO_SENSOR' } } },\n    { _id: 0, estacao_codigo: 1, coletado_em: 1,\n      leituras: { $elemMatch: { valida: false, motivo_invalidade: 'ERRO_SENSOR' } } }\n).sort({ coletado_em: -1, estacao_codigo: 1 }).limit(10).toArray());"
+  },
+  {
+    "collection": "medicoes",
+    "kind": "find",
+    "filter": {
+      "$and": [
+        {
+          "estacao_codigo": "EST-03"
+        },
+        {
+          "coletado_em": {
+            "$gte": {
+              "$date": "2025-03-31T00:00:00Z"
+            },
+            "$lt": {
+              "$date": "2025-04-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "recebido_em": {
+            "$gte": {
+              "$date": "2025-04-01T00:00:00Z"
+            },
+            "$lt": {
+              "$date": "2025-04-02T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "coletado_em": 1,
+      "recebido_em": 1
+    },
+    "sort": {
+      "recebido_em": 1
+    },
+    "title": "4. Quais coletas da EST-03 feitas em 31/03/2025 foram recebidas somente no dia seguinte?",
+    "source": "06_consultas.js",
+    "code": "// 4. Quais coletas da EST-03 feitas em 31/03/2025 foram recebidas somente no dia seguinte?\nprint('Consulta 4');\nprintjson(db.medicoes.find(\n    { $and: [\n        { estacao_codigo: 'EST-03' },\n        { coletado_em: { $gte: ISODate('2025-03-31T00:00:00Z'), $lt: ISODate('2025-04-01T00:00:00Z') } },\n        { recebido_em: { $gte: ISODate('2025-04-01T00:00:00Z'), $lt: ISODate('2025-04-02T00:00:00Z') } }\n    ] },\n    { _id: 0, mensagem_codigo: 1, coletado_em: 1, recebido_em: 1 }\n).sort({ recebido_em: 1 }).toArray());"
+  },
+  {
+    "collection": "telemetria",
+    "kind": "find",
+    "filter": {
+      "equipamento.bateria_pct": {
+        "$lt": 20
+      }
+    },
+    "projection": {
+      "_id": 0,
+      "estacao_codigo": 1,
+      "sensor_codigo": 1,
+      "registrado_em": 1,
+      "equipamento": 1
+    },
+    "sort": {
+      "equipamento.bateria_pct": 1,
+      "registrado_em": -1,
+      "sensor_codigo": 1
+    },
+    "limit": 10,
+    "title": "5. Quais sao os dez diagnosticos com menor bateria, abaixo de 20%, para priorizar a triagem?",
+    "source": "06_consultas.js",
+    "code": "// 5. Quais sao os dez diagnosticos com menor bateria, abaixo de 20%, para priorizar a triagem?\nprint('Consulta 5');\nprintjson(db.telemetria.find(\n    { 'equipamento.bateria_pct': { $lt: 20 } },\n    { _id: 0, estacao_codigo: 1, sensor_codigo: 1, registrado_em: 1, equipamento: 1 }\n).sort({ 'equipamento.bateria_pct': 1, registrado_em: -1, sensor_codigo: 1 }).limit(10).toArray());"
+  },
+  {
+    "collection": "telemetria",
+    "kind": "find",
+    "filter": {
+      "equipamento.bateria_pct": {
+        "$gte": 50
+      },
+      "equipamento.sinal_dbm": {
+        "$lt": -85
+      }
+    },
+    "projection": {
+      "_id": 0,
+      "estacao_codigo": 1,
+      "sensor_codigo": 1,
+      "registrado_em": 1,
+      "equipamento.bateria_pct": 1,
+      "equipamento.sinal_dbm": 1
+    },
+    "sort": {
+      "registrado_em": -1,
+      "sensor_codigo": 1
+    },
+    "limit": 10,
+    "title": "6. Quais dez diagnosticos mais recentes indicam bateria de pelo menos 50%, mas sinal inferior a -85 dBm?",
+    "source": "06_consultas.js",
+    "code": "// 6. Quais dez diagnosticos mais recentes indicam bateria de pelo menos 50%, mas sinal inferior a -85 dBm?\nprint('Consulta 6');\nprintjson(db.telemetria.find(\n    { 'equipamento.bateria_pct': { $gte: 50 }, 'equipamento.sinal_dbm': { $lt: -85 } },\n    { _id: 0, estacao_codigo: 1, sensor_codigo: 1, registrado_em: 1,\n      'equipamento.bateria_pct': 1, 'equipamento.sinal_dbm': 1 }\n).sort({ registrado_em: -1, sensor_codigo: 1 }).limit(10).toArray());"
+  },
+  {
+    "collection": "telemetria",
+    "kind": "find",
+    "filter": {
+      "registrado_em": {
+        "$gte": {
+          "$date": "2025-11-01T00:00:00Z"
+        },
+        "$lt": {
+          "$date": "2025-12-01T00:00:00Z"
+        }
+      },
+      "equipamento.firmware": "1.1.0"
+    },
+    "projection": {
+      "_id": 0,
+      "estacao_codigo": 1,
+      "sensor_codigo": 1,
+      "registrado_em": 1,
+      "equipamento.firmware": 1,
+      "equipamento.temperatura_interna_c": 1
+    },
+    "sort": {
+      "registrado_em": -1,
+      "sensor_codigo": 1
+    },
+    "limit": 10,
+    "title": "7. Quais dez diagnosticos mais recentes de novembro/2025 reportaram firmware 1.1.0?",
+    "source": "06_consultas.js",
+    "code": "// 7. Quais dez diagnosticos mais recentes de novembro/2025 reportaram firmware 1.1.0?\nprint('Consulta 7');\nprintjson(db.telemetria.find(\n    { registrado_em: { $gte: ISODate('2025-11-01T00:00:00Z'), $lt: ISODate('2025-12-01T00:00:00Z') },\n      'equipamento.firmware': '1.1.0' },\n    { _id: 0, estacao_codigo: 1, sensor_codigo: 1, registrado_em: 1,\n      'equipamento.firmware': 1, 'equipamento.temperatura_interna_c': 1 }\n).sort({ registrado_em: -1, sensor_codigo: 1 }).limit(10).toArray());"
+  },
+  {
+    "collection": "logs_ingestao",
+    "kind": "find",
+    "filter": {
+      "etapa": "INGESTAO",
+      "resultado": "REJEITADA",
+      "origem.evento": "FALHA_TRANSMISSAO"
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "registrado_em": 1,
+      "resultado": 1,
+      "motivo": 1
+    },
+    "sort": {
+      "registrado_em": 1,
+      "mensagem_codigo": 1
+    },
+    "limit": 20,
+    "title": "8. Quais foram os vinte primeiros eventos de ausencia de pacote na simulacao?",
+    "source": "06_consultas.js",
+    "code": "// 8. Quais foram os vinte primeiros eventos de ausencia de pacote na simulacao?\nprint('Consulta 8');\nprintjson(db.logs_ingestao.find(\n    { etapa: 'INGESTAO', resultado: 'REJEITADA', 'origem.evento': 'FALHA_TRANSMISSAO' },\n    { _id: 0, mensagem_codigo: 1, registrado_em: 1, resultado: 1, motivo: 1 }\n).sort({ registrado_em: 1, mensagem_codigo: 1 }).limit(20).toArray());"
+  },
+  {
+    "collection": "logs_ingestao",
+    "kind": "find",
+    "filter": {
+      "mensagem_codigo": "EST-01_20250701T070000Z",
+      "etapa": "INGESTAO",
+      "resultado": "ACEITA"
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "registrado_em": 1,
+      "documento_medicao_id": 1,
+      "resultado": 1
+    },
+    "sort": {
+      "registrado_em": 1
+    },
+    "title": "9. Qual foi o registro de recebimento e o documento associado a coleta EST-01 de 01/07/2025 as 07h UTC?",
+    "source": "06_consultas.js",
+    "code": "// 9. Qual foi o registro de recebimento e o documento associado a coleta EST-01 de 01/07/2025 as 07h UTC?\nprint('Consulta 9');\nprintjson(db.logs_ingestao.find(\n    { mensagem_codigo: 'EST-01_20250701T070000Z', etapa: 'INGESTAO', resultado: 'ACEITA' },\n    { _id: 0, mensagem_codigo: 1, registrado_em: 1, documento_medicao_id: 1, resultado: 1 }\n).sort({ registrado_em: 1 }).toArray());"
+  },
+  {
+    "collection": "logs_ingestao",
+    "kind": "find",
+    "filter": {
+      "etapa": "INTEGRACAO",
+      "$or": [
+        {
+          "resultado": "ERRO"
+        },
+        {
+          "resultado": "PENDENTE"
+        },
+        {
+          "resultado": "SEM_REGRA"
+        }
+      ]
+    },
+    "projection": {
+      "_id": 0,
+      "mensagem_codigo": 1,
+      "registrado_em": 1,
+      "resultado": 1,
+      "motivo": 1,
+      "documento_medicao_id": 1
+    },
+    "sort": {
+      "registrado_em": -1,
+      "mensagem_codigo": 1
+    },
+    "limit": 20,
+    "title": "10. Quais sao os vinte eventos de integracao mais recentes com erro, pendencia ou ausencia de regra?",
+    "source": "06_consultas.js",
+    "code": "// 10. Quais sao os vinte eventos de integracao mais recentes com erro, pendencia ou ausencia de regra?\nprint('Consulta 10');\nprintjson(db.logs_ingestao.find(\n    { etapa: 'INTEGRACAO', $or: [\n        { resultado: 'ERRO' }, { resultado: 'PENDENTE' }, { resultado: 'SEM_REGRA' }\n    ] },\n    { _id: 0, mensagem_codigo: 1, registrado_em: 1, resultado: 1, motivo: 1, documento_medicao_id: 1 }\n).sort({ registrado_em: -1, mensagem_codigo: 1 }).limit(20).toArray());"
+  },
+  {
+    "collection": "medicoes",
+    "kind": "aggregate",
+    "pipeline": [
+      {
+        "$match": {
+          "estacao_codigo": "EST-01",
+          "coletado_em": {
+            "$gte": {
+              "$date": "2025-07-01T00:00:00Z"
+            },
+            "$lt": {
+              "$date": "2025-07-02T00:00:00Z"
+            }
+          }
+        }
+      },
+      {
+        "$unwind": "$leituras"
+      },
+      {
+        "$match": {
+          "leituras.parametro_codigo": "TURBIDEZ",
+          "leituras.valida": true
+        }
+      },
+      {
+        "$group": {
+          "_id": {
+            "estacao": "$estacao_codigo",
+            "parametro": "$leituras.parametro_codigo",
+            "unidade": "$leituras.unidade",
+            "dia_utc": {
+              "$dateToString": {
+                "format": "%Y-%m-%d",
+                "date": "$coletado_em",
+                "timezone": "UTC"
+              }
+            }
+          },
+          "quantidade_validas": {
+            "$sum": 1
+          },
+          "soma": {
+            "$sum": "$leituras.valor"
+          },
+          "minimo": {
+            "$min": "$leituras.valor"
+          },
+          "maximo": {
+            "$max": "$leituras.valor"
+          }
+        }
+      },
+      {
+        "$project": {
+          "_id": 0,
+          "estacao": "$_id.estacao",
+          "parametro": "$_id.parametro",
+          "unidade": "$_id.unidade",
+          "dia_utc": "$_id.dia_utc",
+          "quantidade_validas": 1,
+          "soma": 1,
+          "minimo": 1,
+          "maximo": 1,
+          "media": {
+            "$round": [
+              {
+                "$divide": [
+                  "$soma",
+                  "$quantidade_validas"
+                ]
+              },
+              6
+            ]
+          }
+        }
+      },
+      {
+        "$sort": {
+          "estacao": 1,
+          "dia_utc": 1
+        }
+      }
+    ],
+    "title": "1. Qual o resumo das leituras validas de turbidez da EST-01 em 01/07/2025?",
+    "source": "07_aggregation_pipelines.js",
+    "code": "// 1. Qual o resumo das leituras validas de turbidez da EST-01 em 01/07/2025?\nprint('Pipeline 1 - Resumo diario de turbidez');\nprintjson(db.medicoes.aggregate([\n    { $match: {\n        estacao_codigo: 'EST-01',\n        coletado_em: { $gte: ISODate('2025-07-01T00:00:00Z'), $lt: ISODate('2025-07-02T00:00:00Z') }\n    } },\n    { $unwind: '$leituras' },\n    { $match: { 'leituras.parametro_codigo': 'TURBIDEZ', 'leituras.valida': true } },\n    { $group: {\n        _id: {\n            estacao: '$estacao_codigo', parametro: '$leituras.parametro_codigo', unidade: '$leituras.unidade',\n            dia_utc: { $dateToString: { format: '%Y-%m-%d', date: '$coletado_em', timezone: 'UTC' } }\n        },\n        quantidade_validas: { $sum: 1 },\n        soma: { $sum: '$leituras.valor' },\n        minimo: { $min: '$leituras.valor' },\n        maximo: { $max: '$leituras.valor' }\n    } },\n    { $project: {\n        _id: 0, estacao: '$_id.estacao', parametro: '$_id.parametro', unidade: '$_id.unidade',\n        dia_utc: '$_id.dia_utc', quantidade_validas: 1, soma: 1, minimo: 1, maximo: 1,\n        media: { $round: [{ $divide: ['$soma', '$quantidade_validas'] }, 6] }\n    } },\n    { $sort: { estacao: 1, dia_utc: 1 } }\n]).toArray());"
+  },
+  {
+    "collection": "telemetria",
+    "kind": "aggregate",
+    "pipeline": [
+      {
+        "$match": {
+          "registrado_em": {
+            "$gte": {
+              "$date": "2025-03-01T00:00:00Z"
+            },
+            "$lt": {
+              "$date": "2025-03-08T00:00:00Z"
+            }
+          },
+          "$or": [
+            {
+              "equipamento.bateria_pct": {
+                "$lt": 20
+              }
+            },
+            {
+              "equipamento.sinal_dbm": {
+                "$lt": -85
+              }
+            }
+          ]
+        }
+      },
+      {
+        "$group": {
+          "_id": "$estacao_codigo",
+          "quantidade_diagnosticos": {
+            "$sum": 1
+          },
+          "sensores": {
+            "$addToSet": "$sensor_codigo"
+          },
+          "menor_bateria_pct": {
+            "$min": "$equipamento.bateria_pct"
+          },
+          "pior_sinal_dbm": {
+            "$min": "$equipamento.sinal_dbm"
+          }
+        }
+      },
+      {
+        "$project": {
+          "_id": 0,
+          "estacao": "$_id",
+          "quantidade_diagnosticos": 1,
+          "sensores_distintos": {
+            "$size": "$sensores"
+          },
+          "sensores": 1,
+          "menor_bateria_pct": 1,
+          "pior_sinal_dbm": 1
+        }
+      },
+      {
+        "$sort": {
+          "quantidade_diagnosticos": -1,
+          "estacao": 1
+        }
+      }
+    ],
+    "title": "2. Quais estacoes concentraram mais diagnosticos com bateria abaixo de 20% ou sinal inferior a -85 dBm na primeira semana de marco/2025?",
+    "source": "07_aggregation_pipelines.js",
+    "code": "// 2. Quais estacoes concentraram mais diagnosticos com bateria abaixo de 20% ou sinal inferior a -85 dBm na primeira semana de marco/2025?\nprint('Pipeline 2 - Priorizacao de verificacoes dos equipamentos');\nprintjson(db.telemetria.aggregate([\n    { $match: {\n        registrado_em: { $gte: ISODate('2025-03-01T00:00:00Z'), $lt: ISODate('2025-03-08T00:00:00Z') },\n        $or: [\n            { 'equipamento.bateria_pct': { $lt: 20 } },\n            { 'equipamento.sinal_dbm': { $lt: -85 } }\n        ]\n    } },\n    { $group: {\n        _id: '$estacao_codigo',\n        quantidade_diagnosticos: { $sum: 1 },\n        sensores: { $addToSet: '$sensor_codigo' },\n        menor_bateria_pct: { $min: '$equipamento.bateria_pct' },\n        pior_sinal_dbm: { $min: '$equipamento.sinal_dbm' }\n    } },\n    { $project: {\n        _id: 0, estacao: '$_id', quantidade_diagnosticos: 1,\n        sensores_distintos: { $size: '$sensores' },\n        sensores: 1, menor_bateria_pct: 1, pior_sinal_dbm: 1\n    } },\n    { $sort: { quantidade_diagnosticos: -1, estacao: 1 } }\n]).toArray());"
+  }
+]

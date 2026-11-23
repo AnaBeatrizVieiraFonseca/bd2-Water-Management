@@ -38,3 +38,9 @@ Desktop.ini
 .DS_Store
 
 # Os scripts SQL, os JSONs e a carga ZIP do projeto permanecem versionados.
+
+# Ambientes Python criados na pasta do projeto
+/Include/
+/Lib/
+/Scripts/
+/pyvenv.cfg

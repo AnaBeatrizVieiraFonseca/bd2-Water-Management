@@ -1,0 +1,2 @@
+{"estacao_codigo":"EST-01","sensor_codigo":"DEMO-IMPORT-1","registrado_em":{"$date":"2025-07-01T07:00:00Z"},"equipamento":{"bateria_pct":30,"sinal_dbm":-70},"origem":{"canal":"IMPORTACAO_APRESENTACAO"}}
+{"estacao_codigo":"EST-01","sensor_codigo":"DEMO-IMPORT-2","registrado_em":{"$date":"2025-07-01T08:00:00Z"},"equipamento":{"bateria_pct":80,"sinal_dbm":-60},"origem":{"canal":"IMPORTACAO_APRESENTACAO"}}
